@@ -991,6 +991,13 @@ core
 .#*
 \#*#
 
+# Zig (this repo's zig16 branch adds a build.zig; the generated headers
+# above under gettext-runtime/intl/ are committed intentionally -- see
+# build.zig's comments -- so `zig build` doesn't need a full gnulib
+# bootstrap or bison/gperf at build time.)
+.zig-cache/
+zig-out/
+
 # libtextstyle has its own .gitignore.
 !/libtextstyle/**
 
