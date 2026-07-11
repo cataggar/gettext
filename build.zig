@@ -13,6 +13,11 @@ const std = @import("std");
 //   stdcountof.h, ...) for locale-name normalization this build doesn't
 //   need. log.c (optional untranslated-string debug logging) IS
 //   included -- dcigettext.c calls into it unconditionally.
+//   (libgnuintl.in.h still redirects plain setlocale() to
+//   libintl_setlocale() on Windows/macOS unconditionally though, so a
+//   minimal passthrough shim for that symbol -- setlocale-compat.c,
+//   Windows-only -- is added separately below, without the extra
+//   gnulib chain.)
 const intl_sources = [_][]const u8{
     "bindtextdom.c",
     "dcgettext.c",
@@ -59,6 +64,15 @@ pub fn build(b: *std.Build) void {
         .files = &intl_sources,
         .flags = &.{ "-std=gnu99", "-w" },
     });
+    // Windows-only libintl_setlocale() shim -- see setlocale-compat.c's
+    // own header comment for why intl_sources above doesn't include
+    // upstream's real setlocale.c, and why this is still needed.
+    if (target.result.os.tag == .windows) {
+        mod.addCSourceFile(.{
+            .file = b.path("setlocale-compat.c"),
+            .flags = &.{ "-std=gnu99", "-w" },
+        });
+    }
 
     const lib = b.addLibrary(.{
         .name = "intl",
