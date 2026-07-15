@@ -91,11 +91,38 @@ typedef pthread_mutex_t __libc_lock_t;
 #define __libc_lock_lock(NAME) pthread_mutex_lock (&(NAME))
 #define __libc_lock_unlock(NAME) pthread_mutex_unlock (&(NAME))
 
-typedef pthread_mutex_t __libc_lock_recursive_t;
+typedef struct
+{
+  pthread_mutex_t mutex;
+  pthread_mutex_t init_mutex;
+  int initialized;
+}
+__libc_lock_recursive_t;
+
+static inline void
+__libc_lock_recursive_ensure_init (__libc_lock_recursive_t *lock)
+{
+  pthread_mutex_lock (&lock->init_mutex);
+  if (!lock->initialized)
+    {
+      pthread_mutexattr_t attr;
+
+      pthread_mutexattr_init (&attr);
+      pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_RECURSIVE);
+      pthread_mutex_destroy (&lock->mutex);
+      pthread_mutex_init (&lock->mutex, &attr);
+      pthread_mutexattr_destroy (&attr);
+      lock->initialized = 1;
+    }
+  pthread_mutex_unlock (&lock->init_mutex);
+}
+
 #define __libc_lock_define_initialized_recursive(CLASS, NAME) \
-  CLASS __libc_lock_recursive_t NAME = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-#define __libc_lock_lock_recursive(NAME) pthread_mutex_lock (&(NAME))
-#define __libc_lock_unlock_recursive(NAME) pthread_mutex_unlock (&(NAME))
+  CLASS __libc_lock_recursive_t NAME = { PTHREAD_MUTEX_INITIALIZER, \
+                                         PTHREAD_MUTEX_INITIALIZER, 0 };
+#define __libc_lock_lock_recursive(NAME) \
+  (__libc_lock_recursive_ensure_init (&(NAME)), pthread_mutex_lock (&(NAME).mutex))
+#define __libc_lock_unlock_recursive(NAME) pthread_mutex_unlock (&(NAME).mutex)
 
 #endif
 

@@ -8,6 +8,7 @@
         "build.zig",
         "build.zig.zon",
         "gettext-runtime/intl",
+        "setlocale-compat.c",
         "COPYING",
         "README",
     },
