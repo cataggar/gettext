@@ -1,5 +1,6 @@
 /* Hand-written stand-in for gettext-runtime/intl's autoconf-generated
-   config.h. Starts minimal; see build.zig for target (Linux/Windows). */
+   config.h. Starts minimal; see build.zig for target
+   (Linux/Windows/macOS). */
 
 #define PACKAGE "gettext-runtime"
 #define VERSION "0.26"
@@ -8,7 +9,9 @@
 
 #define ENABLE_NLS 1
 #define HAVE_ICONV 0
+#ifndef __APPLE__
 #define HAVE_MEMPCPY 1
+#endif
 #define HAVE_UNISTD_H 1
 #define HAVE_GETCWD 1
 /* mingw's CRT doesn't have stpcpy (a GNU/glibc extension); dcigettext.c
